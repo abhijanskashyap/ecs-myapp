@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR Public..."
+      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/w6k7x4v9
+
+  build:
+    commands:
+      - echo "Build started on $(date)"
+      - docker build -t myapp .
+      - docker tag myapp:latest public.ecr.aws/w6k7x4v9/myapp:latest
+
+  post_build:
+    commands:
+      - echo "Pushing Docker image to ECR Public..."
+      - docker push public.ecr.aws/w6k7x4v9/myapp:latest
+      - printf '[{"name":"myapp","imageUri":"public.ecr.aws/w6k7x4v9/myapp:latest"}]' > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
